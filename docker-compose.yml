@@ -2,9 +2,7 @@ version: '3.8'
 
 services:
   frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: masegi/tuition-marketplace-fe:latest
     container_name: tuition_fe
     restart: always
     ports:
