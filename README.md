@@ -1,73 +1,64 @@
-# React + TypeScript + Vite
+# Tuition Marketplace Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the frontend application for the Tuition Marketplace, built with React, Vite, TypeScript, and Tailwind CSS.
 
-Currently, two official plugins are available:
+## Features
+- **Role-based Dashboards:** Dedicated views for Parents and Tutors.
+- **Authentication:** JWT & HttpOnly cookie-based session handling.
+- **Case Management:** Create, view, and manage tuition cases.
+- **Tutor Directory:** Browse tutors, view profiles, and send case invitations.
+- **Document Management:** Securely upload and download past papers, briefs, and qualifications.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Local Development
 
-## React Compiler
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+2. Create a `.env` file in the root directory (based on `.env.example` if available) or use the defaults:
+   ```
+   VITE_API_URL=http://localhost:5001/api
+   ```
 
-## Expanding the ESLint configuration
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Production Deployment (Docker)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+This application is ready to be containerized using Docker and served via Nginx.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Using Docker Compose
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+You can spin up the production build of the frontend easily using Docker Compose:
+
+1. Update your production API URL in `.env.production`:
+   ```
+   VITE_API_URL=http://your-production-backend-ip:5001/api
+   ```
+
+2. Build and start the container:
+   ```bash
+   docker-compose up -d --build
+   ```
+
+The application will be served on port `80`.
+
+### Manual Docker Build
+
+If you are not using Docker Compose, you can build and run the image manually:
+
+```bash
+docker build -t tuition-marketplace-fe .
+docker run -p 80:80 -d tuition-marketplace-fe
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Integrating with the Backend
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+The backend (located in the `tuition-marketplace-be` repository) also has its own `docker-compose.yml` file which orchestrates the PostgreSQL database, Redis, and the Node.js API server. 
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+When deploying both together on the same server, you have two options:
+1. **Separate Networks**: Expose the backend API on a specific port (e.g., `5001`) and point the frontend's `.env.production` to `http://<SERVER_IP>:5001/api`.
+2. **Unified Setup (Optional)**: Combine the services into a single `docker-compose.yml` file in a root repository, allowing the Nginx container to reverse-proxy requests directly to the backend container over a shared Docker network.
