@@ -24,19 +24,22 @@ export function Profile() {
   });
 
   const { data: docsData, isLoading: docsLoading } = useQuery({
-    queryKey: ['my-documents'],
+    queryKey: ['my-documents', tutorData?.id],
     queryFn: async () => {
-      const res = await api.get('/tutors/me/documents');
-      return res.data;
+      if (!tutorData?.id) return { documents: [] };
+      // Fetch the full tutor profile which includes the documents array
+      const res = await api.get(`/tutors/${tutorData.id}`);
+      return { documents: res.data.tutor.documents || [] };
     },
+    enabled: !!tutorData?.id
   });
 
   useEffect(() => {
-    if (tutorData?.tutor) {
+    if (tutorData && tutorData.id) {
       reset({
-        displayName: tutorData.tutor.displayName,
-        qualifications: tutorData.tutor.qualifications || '',
-        experiences: tutorData.tutor.experiences || '',
+        displayName: tutorData.displayName,
+        qualifications: tutorData.qualifications || '',
+        experiences: tutorData.experiences || '',
       });
     }
   }, [tutorData, reset]);
@@ -87,8 +90,14 @@ export function Profile() {
 
   const handleDownload = async (docId: string, filename: string) => {
     try {
-      const res = await api.get(`/tutors/me/documents/${docId}/download`, { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([res.data]));
+      // The backend download endpoint is /api/documents/[id]/download and returns a signedUrl
+      const res = await api.get(`/documents/${docId}/download`);
+      const signedUrl = res.data.signedUrl;
+      
+      const fileRes = await fetch(signedUrl);
+      const blob = await fileRes.blob();
+      
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', filename);
