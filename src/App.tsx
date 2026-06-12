@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { RootLayout } from './components/layout/RootLayout';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
@@ -27,20 +28,23 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <Routes>
-      <Route element={<RootLayout />}>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        
-        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/cases/new" element={<ProtectedRoute><CreateCase /></ProtectedRoute>} />
-        <Route path="/cases/:id" element={<ProtectedRoute><CaseDetail /></ProtectedRoute>} />
-        <Route path="/tutors" element={<ProtectedRoute><TutorDirectory /></ProtectedRoute>} />
-        <Route path="/tutors/:id" element={<ProtectedRoute><TutorProfileDetail /></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-      </Route>
-    </Routes>
+    <>
+      <Toaster position="top-right" />
+      <Routes>
+        <Route element={<RootLayout />}>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/cases/new" element={<ProtectedRoute><CreateCase /></ProtectedRoute>} />
+          <Route path="/cases/:id" element={<ProtectedRoute><CaseDetail /></ProtectedRoute>} />
+          <Route path="/tutors" element={<ProtectedRoute><TutorDirectory /></ProtectedRoute>} />
+          <Route path="/tutors/:id" element={<ProtectedRoute><TutorProfileDetail /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        </Route>
+      </Routes>
+    </>
   );
 }
 

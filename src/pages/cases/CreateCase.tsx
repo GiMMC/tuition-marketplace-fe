@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'react-hot-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
@@ -10,6 +11,7 @@ import { useState } from 'react';
 export function CreateCase() {
   const { register, handleSubmit, formState: { errors } } = useForm();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [submitError, setSubmitError] = useState('');
 
   const createCaseMutation = useMutation({
@@ -22,10 +24,13 @@ export function CreateCase() {
       return res.data;
     },
     onSuccess: (data) => {
+      toast.success('Case created successfully!');
+      queryClient.invalidateQueries({ queryKey: ['cases'] });
       navigate(`/cases/${data.case.id}`);
     },
     onError: (error: any) => {
       setSubmitError(error.response?.data?.error || 'Failed to create case');
+      toast.error('Failed to create case');
     }
   });
 

@@ -4,14 +4,13 @@ import { api } from '../lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { UserCircle, Upload, FileText, Download } from 'lucide-react';
-import { useRef, useState, useEffect } from 'react';
+import { UserCircle, Upload, FileText, Download, Eye } from 'lucide-react';
+import { useRef, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
 
 export function Profile() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadError, setUploadError] = useState('');
-  const [updateSuccess, setUpdateSuccess] = useState('');
 
   const { register, handleSubmit, reset } = useForm();
 
@@ -50,9 +49,11 @@ export function Profile() {
       return res.data;
     },
     onSuccess: () => {
-      setUpdateSuccess('Profile updated successfully');
+      toast.success('Profile updated successfully');
       queryClient.invalidateQueries({ queryKey: ['my-profile'] });
-      setTimeout(() => setUpdateSuccess(''), 3000);
+    },
+    onError: () => {
+      toast.error('Failed to update profile');
     }
   });
 
@@ -66,12 +67,12 @@ export function Profile() {
       return res.data;
     },
     onSuccess: () => {
+      toast.success('Document uploaded successfully');
       queryClient.invalidateQueries({ queryKey: ['my-documents'] });
       if (fileInputRef.current) fileInputRef.current.value = '';
-      setUploadError('');
     },
     onError: (error: any) => {
-      setUploadError(error.response?.data?.error || 'Failed to upload document');
+      toast.error(error.response?.data?.error || 'Failed to upload document');
     }
   });
 
@@ -81,11 +82,22 @@ export function Profile() {
 
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
-      setUploadError('File size exceeds 5MB limit');
+      toast.error('File size exceeds 5MB limit');
       return;
     }
 
     uploadMutation.mutate(file);
+  };
+
+  const handlePreview = async (docId: string) => {
+    try {
+      const res = await api.get(`/documents/${docId}/download`);
+      const signedUrl = res.data.signedUrl;
+      window.open(signedUrl, '_blank');
+    } catch (err) {
+      console.error('Preview failed', err);
+      toast.error('Failed to preview document');
+    }
   };
 
   const handleDownload = async (docId: string, filename: string) => {
@@ -105,6 +117,7 @@ export function Profile() {
       link.parentNode?.removeChild(link);
     } catch (err) {
       console.error('Download failed', err);
+      toast.error('Failed to download document');
     }
   };
 
@@ -156,11 +169,6 @@ export function Profile() {
             </form>
           </CardContent>
           <CardFooter className="flex flex-col items-stretch gap-4 border-t border-slate-100 pt-6">
-            {updateSuccess && (
-              <div className="p-3 bg-green-50 text-green-700 text-sm rounded-md w-full text-center">
-                {updateSuccess}
-              </div>
-            )}
             <Button type="submit" form="profile-form" isLoading={updateMutation.isPending} className="w-full">
               Save Changes
             </Button>
@@ -193,12 +201,6 @@ export function Profile() {
             </div>
           </CardHeader>
           <CardContent>
-            {uploadError && (
-              <div className="p-3 bg-red-50 text-red-600 text-sm rounded-md mb-4 border border-red-200">
-                {uploadError}
-              </div>
-            )}
-
             {docsLoading ? (
               <div className="text-slate-500 text-sm">Loading documents...</div>
             ) : docsData?.documents?.length === 0 ? (
@@ -217,13 +219,24 @@ export function Profile() {
                         <p className="text-xs text-slate-500">{(doc.size / 1024).toFixed(1)} KB</p>
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDownload(doc.id, doc.originalName)}
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handlePreview(doc.id)}
+                        title="Preview"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDownload(doc.id, doc.originalName)}
+                        title="Download"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </li>
                 ))}
               </ul>

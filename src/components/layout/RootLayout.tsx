@@ -1,15 +1,28 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { Button } from '../ui/Button';
-import { BookOpen, UserCircle, LogOut, Menu } from 'lucide-react';
+import { BookOpen, UserCircle, LogOut, Menu, Bell } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '../../lib/api';
 
 export function RootLayout() {
   const { user } = useAuth();
   const { logout } = useAuthStore();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const { data } = useQuery({
+    queryKey: ['cases'],
+    queryFn: async () => {
+      const res = await api.get('/cases');
+      return res.data;
+    },
+    enabled: user?.role === 'TUTOR',
+  });
+
+  const invitationsCount = data?.cases?.filter((c: any) => c.status === 'OPEN').length || 0;
 
   const handleLogout = () => {
     // In a real app, also call API to invalidate cookie
@@ -47,6 +60,16 @@ export function RootLayout() {
             <div className="flex items-center gap-4 border-l pl-4 border-slate-200">
               {user ? (
                 <div className="flex items-center gap-4">
+                  {user.role === 'TUTOR' && (
+                    <Link to="/dashboard" className="relative text-slate-500 hover:text-slate-900 transition-colors">
+                      <Bell className="h-5 w-5" />
+                      {invitationsCount > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                          {invitationsCount}
+                        </span>
+                      )}
+                    </Link>
+                  )}
                   <div className="flex items-center gap-2 text-sm text-slate-700">
                     <UserCircle className="h-5 w-5 text-slate-400" />
                     <span>{user.email}</span>
