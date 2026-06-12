@@ -46,7 +46,7 @@ export function Profile() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await api.patch('/tutors/me', data);
+      const res = await api.post('/tutors/me', data);
       return res.data;
     },
     onSuccess: () => {
@@ -90,13 +90,12 @@ export function Profile() {
 
   const handleDownload = async (docId: string, filename: string) => {
     try {
-      // The backend download endpoint is /api/documents/[id]/download and returns a signedUrl
       const res = await api.get(`/documents/${docId}/download`);
       const signedUrl = res.data.signedUrl;
-      
+
       const fileRes = await fetch(signedUrl);
       const blob = await fileRes.blob();
-      
+
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -136,7 +135,7 @@ export function Profile() {
                 label="Display Name"
                 {...register('displayName', { required: 'Display name is required' })}
               />
-              
+
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-slate-700">Qualifications</label>
                 <textarea
@@ -175,16 +174,16 @@ export function Profile() {
               <CardDescription>Upload degree certs or MOE letters</CardDescription>
             </div>
             <div>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleFileChange} 
-                className="hidden" 
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
                 accept=".pdf,.docx,.png,.jpg,.jpeg"
               />
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => fileInputRef.current?.click()}
                 isLoading={uploadMutation.isPending}
               >
@@ -218,9 +217,9 @@ export function Profile() {
                         <p className="text-xs text-slate-500">{(doc.size / 1024).toFixed(1)} KB</p>
                       </div>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => handleDownload(doc.id, doc.originalName)}
                     >
                       <Download className="h-4 w-4" />
